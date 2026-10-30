@@ -79,6 +79,7 @@ public final class LocationSnapper {
     /**
      * Centers a finite horizontal coordinate, including negative coordinates.
      * This pure operation is safe on any thread and retains no state.
+     *
      * @param coordinate finite X or Z
      * @return containing block center
      * @throws IllegalArgumentException for non-finite input
@@ -91,6 +92,7 @@ public final class LocationSnapper {
     /**
      * Floors a finite standing height to a block boundary, keeping feet above the floor.
      * This pure operation is safe on any thread and retains no state.
+     *
      * @param height finite standing Y
      * @return integer standing height
      * @throws IllegalArgumentException for non-finite input
@@ -103,6 +105,7 @@ public final class LocationSnapper {
     /**
      * Rounds a finite yaw to the nearest 45-degree step in (-180, 180].
      * This pure operation is safe on any thread and retains no state.
+     *
      * @param yaw finite horizontal view angle
      * @return snapped yaw
      * @throws IllegalArgumentException for non-finite input

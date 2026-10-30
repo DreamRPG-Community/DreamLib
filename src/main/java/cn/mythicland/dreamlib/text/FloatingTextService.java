@@ -36,13 +36,13 @@ public interface FloatingTextService extends AutoCloseable {
      * Shows text only to nearby players accepted by a dynamically evaluated viewer filter.
      * The filter is evaluated on the Bukkit primary thread while the handle is active.
      *
-     * @param location anchor location; it is defensively copied
+     * @param location      anchor location; it is defensively copied
      * @param specification text and display parameters
-     * @param viewerFilter player eligibility, rechecked as viewers are refreshed
+     * @param viewerFilter  player eligibility, rechecked as viewers are refreshed
      * @return lifecycle handle
-     * @throws NullPointerException if an argument is null
+     * @throws NullPointerException     if an argument is null
      * @throws IllegalArgumentException if the location has no world
-     * @throws IllegalStateException if called off the primary thread or after close
+     * @throws IllegalStateException    if called off the primary thread or after close
      */
     FloatingTextHandle show(Location location, FloatingTextSpec specification, Predicate<Player> viewerFilter);
 

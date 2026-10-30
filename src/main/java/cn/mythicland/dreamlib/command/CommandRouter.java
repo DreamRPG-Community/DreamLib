@@ -444,7 +444,8 @@ public final class CommandRouter implements CommandExecutor, TabCompleter {
 
     private List<String> completeTreeHelp(CommandSender sender, String[] arguments) {
         if (arguments.length < 2) return List.of();
-        String prefix = String.join(" ", Arrays.asList(arguments).subList(1, arguments.length - 1)).toLowerCase(Locale.ROOT);
+        String prefix =
+                String.join(" ", Arrays.asList(arguments).subList(1, arguments.length - 1)).toLowerCase(Locale.ROOT);
         String current = arguments[arguments.length - 1].toLowerCase(Locale.ROOT);
         String start = prefix.isEmpty() ? "" : prefix + " ";
         return visibleTreeCommands(sender).stream().map(CommandNode::name)
@@ -488,7 +489,8 @@ public final class CommandRouter implements CommandExecutor, TabCompleter {
             sender.sendMessage(VanillaCommandMessages.green("/" + label + " 帮助分类:"));
             helpGroups.forEach((key, description) -> {
                 if (!commandsForGroup(sender, key).isEmpty()) {
-                    sender.sendMessage(VanillaCommandMessages.usage("/" + label + " help " + key + " - " + description));
+                    sender.sendMessage(
+                            VanillaCommandMessages.usage("/" + label + " help " + key + " - " + description));
                 }
             });
             return;
@@ -507,9 +509,11 @@ public final class CommandRouter implements CommandExecutor, TabCompleter {
         for (CommandNode command : commands) {
             String usage = command.usage();
             String root = "/" + rootCommand;
-            if (usage.equals(root) || usage.startsWith(root + " ")) usage = "/" + label + usage.substring(root.length());
+            if (usage.equals(root) || usage.startsWith(root + " "))
+                usage = "/" + label + usage.substring(root.length());
             String description = command.description();
-            sender.sendMessage(VanillaCommandMessages.usage(usage + (description.isBlank() ? "" : " - " + description)));
+            sender.sendMessage(
+                    VanillaCommandMessages.usage(usage + (description.isBlank() ? "" : " - " + description)));
         }
     }
 

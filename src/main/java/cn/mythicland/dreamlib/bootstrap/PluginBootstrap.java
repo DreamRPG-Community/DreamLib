@@ -170,7 +170,8 @@ public final class PluginBootstrap implements AutoCloseable {
         for (Class<?> componentType : components.annotatedTypes(ListenerComponent.class)) {
             Object component = components.resolve(componentType);
             if (!(component instanceof Listener listener)) {
-                throw new IllegalStateException("Listener component is not a Bukkit Listener: " + componentType.getName());
+                throw new IllegalStateException(
+                        "Listener component is not a Bukkit Listener: " + componentType.getName());
             }
             Bukkit.getPluginManager().registerEvents(listener, plugin);
             listeners.add(listener);

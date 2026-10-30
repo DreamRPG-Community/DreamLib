@@ -23,7 +23,7 @@ public final class InventoryExchange {
     /**
      * A detached outcome. Failed outcomes contain the unchanged source contents.
      *
-     * @param status planning outcome
+     * @param status   planning outcome
      * @param contents complete inventory contents after a successful exchange
      */
     public record Result(Status status, ItemStack[] contents) {
@@ -41,13 +41,13 @@ public final class InventoryExchange {
      * Plans the greatest number of complete exchanges that fits in the source inventory.
      * Only the original source items are available as requirements; rewards are not reused.
      *
-     * @param source inventory slots available for the exchange
+     * @param source       inventory slots available for the exchange
      * @param requirements item prototypes and quantities consumed per exchange
-     * @param rewards item stacks awarded per exchange
-     * @param matches comparison of an inventory item with a requirement prototype
+     * @param rewards      item stacks awarded per exchange
+     * @param matches      comparison of an inventory item with a requirement prototype
      * @return detached plan, or the unchanged source with the reason no exchange fits
      * @throws IllegalArgumentException if requirements or rewards are empty or invalid
-     * @throws NullPointerException if source, requirements, rewards or matches is null
+     * @throws NullPointerException     if source, requirements, rewards or matches is null
      */
     public static Result planMaximum(
             ItemStack[] source,
@@ -57,7 +57,8 @@ public final class InventoryExchange {
     ) {
         Objects.requireNonNull(source, "source");
         Objects.requireNonNull(matches, "matches");
-        if (requirements.isEmpty() || rewards.isEmpty()) throw new IllegalArgumentException("Exchange requires costs and rewards");
+        if (requirements.isEmpty() || rewards.isEmpty())
+            throw new IllegalArgumentException("Exchange requires costs and rewards");
         requirements.forEach(InventoryExchange::validate);
         rewards.forEach(InventoryExchange::validate);
         int maximum = Integer.MAX_VALUE;
@@ -92,10 +93,10 @@ public final class InventoryExchange {
      * Requirements use the supplied identity rule; rewards stack only when Bukkit considers them similar.
      * No input item or array is mutated, including on failure.
      *
-     * @param source inventory slots available for the exchange
+     * @param source       inventory slots available for the exchange
      * @param requirements item prototypes whose amounts are the quantities to consume
-     * @param rewards item stacks whose entire quantities must fit
-     * @param matches comparison of an inventory item with a requirement prototype
+     * @param rewards      item stacks whose entire quantities must fit
+     * @param matches      comparison of an inventory item with a requirement prototype
      * @return detached plan, including an explicit missing-material or full-inventory outcome
      * @throws IllegalArgumentException if a requirement or reward is empty or has an invalid amount
      */
@@ -106,7 +107,8 @@ public final class InventoryExchange {
             BiPredicate<ItemStack, ItemStack> matches
     ) {
         Objects.requireNonNull(matches, "matches");
-        if (requirements.isEmpty() || rewards.isEmpty()) throw new IllegalArgumentException("Exchange requires costs and rewards");
+        if (requirements.isEmpty() || rewards.isEmpty())
+            throw new IllegalArgumentException("Exchange requires costs and rewards");
         requirements.forEach(InventoryExchange::validate);
         rewards.forEach(InventoryExchange::validate);
         ItemStack[] contents = copy(source);

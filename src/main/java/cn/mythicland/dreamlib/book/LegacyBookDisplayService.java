@@ -9,7 +9,9 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Objects;
 
-/** Paper 1.12.2 client-side book display using temporary inventory packets. */
+/**
+ * Paper 1.12.2 client-side book display using temporary inventory packets.
+ */
 public final class LegacyBookDisplayService implements BookDisplayService {
     @Override
     public void open(Player player, ItemStack book) {
@@ -21,7 +23,8 @@ public final class LegacyBookDisplayService implements BookDisplayService {
         try {
             String serverPackage = Bukkit.getServer().getClass().getPackage().getName();
             String version = serverPackage.substring(serverPackage.lastIndexOf('.') + 1);
-            if (!version.equals("v1_12_R1")) throw new IllegalStateException("Unsupported book display server: " + version);
+            if (!version.equals("v1_12_R1"))
+                throw new IllegalStateException("Unsupported book display server: " + version);
             String nms = "net.minecraft.server." + version + ".";
             Class<?> stackClass = Class.forName(nms + "ItemStack");
             Class<?> packetClass = Class.forName(nms + "Packet");

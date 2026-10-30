@@ -26,6 +26,7 @@ class MenuPageLayoutTest {
     void negativeEntryCountIsRejected() {
         assertThrows(IllegalArgumentException.class, () -> MenuPageLayout.compactSize(-1));
     }
+
     @Test
     void visitsOnlyEntriesOnTheClampedPageUsingTheirContentSlots() {
         List<Integer> entries = IntStream.range(0, 31).boxed().toList();

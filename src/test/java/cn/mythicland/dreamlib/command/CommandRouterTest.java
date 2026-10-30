@@ -155,7 +155,8 @@ class CommandRouterTest {
         messages.clear();
         router.onCommand(sender(messages, permission -> false), null, "ex", new String[]{"help"});
         assertEquals(List.of("§4> §c/ex npc"), messages);
-        assertEquals(List.of("combat", "items", "npc"), router.onTabComplete(admin, null, "ex", new String[]{"help", ""}));
+        assertEquals(List.of("combat", "items", "npc"),
+                router.onTabComplete(admin, null, "ex", new String[]{"help", ""}));
         assertEquals(List.of("edit"), router.onTabComplete(admin, null, "ex", new String[]{"help", "items", ""}));
         assertEquals(List.of("legacy-id"), router.onTabComplete(admin, null, "ex", new String[]{"npc", "lega"}));
     }
@@ -243,28 +244,28 @@ class CommandRouterTest {
     }
 
     @CommandComponent("edit")
-        private record RootCommand(AtomicBoolean executed) {
+    private record RootCommand(AtomicBoolean executed) {
 
         @CommandHandler
-            private void execute(CommandContext context) {
-                context.requireArguments(0);
-                executed.set(true);
-            }
+        private void execute(CommandContext context) {
+            context.requireArguments(0);
+            executed.set(true);
         }
+    }
 
     @CommandComponent("gm")
-        private record RootArgumentCommand(AtomicReference<List<String>> received) {
+    private record RootArgumentCommand(AtomicReference<List<String>> received) {
 
         @CommandHandler
-            private void execute(CommandContext context) {
-                received.set(context.arguments());
-            }
-
-            @CommandCompleter
-            private List<String> complete(CommandContext context) {
-                return List.of("0", "1", "2", "3");
-            }
+        private void execute(CommandContext context) {
+            received.set(context.arguments());
         }
+
+        @CommandCompleter
+        private List<String> complete(CommandContext context) {
+            return List.of("0", "1", "2", "3");
+        }
+    }
 
     @CommandComponent("example")
     private static final class AnnotatedCommand {
@@ -281,66 +282,87 @@ class CommandRouterTest {
     }
 
     @CommandComponent("nested")
-        private record NestedCommand(List<String> received) {
+    private record NestedCommand(List<String> received) {
 
         @CommandHandler(value = "cmd add", permission = "nested.add")
-            private void add(CommandContext context) {
-                context.requireAtLeast(3);
-                received.addAll(context.arguments());
-            }
-
-            @CommandCompleter("cmd add")
-            private List<String> complete(CommandContext context) {
-                return List.of("player", "console");
-            }
+        private void add(CommandContext context) {
+            context.requireAtLeast(3);
+            received.addAll(context.arguments());
         }
+
+        @CommandCompleter("cmd add")
+        private List<String> complete(CommandContext context) {
+            return List.of("player", "console");
+        }
+    }
 
     @CommandComponent(value = "example", helpGroups = {"player:玩家", "items:物品"})
     private static final class GroupedCommand {
         @CommandHandler(helpGroup = "player")
-        private void home(CommandContext context) { }
+        private void home(CommandContext context) {
+        }
 
         @CommandHandler(value = "items reload", helpGroup = "items", permission = "example.admin")
-        private void reload(CommandContext context) { }
+        private void reload(CommandContext context) {
+        }
 
         @CommandHandler(value = "items edit", helpGroup = "items", permission = "example.admin")
-        private void edit(CommandContext context) { }
+        private void edit(CommandContext context) {
+        }
 
         @CommandCompleter("items edit")
-        private List<String> completeEdit(CommandContext context) { return List.of("alpha", "beta"); }
+        private List<String> completeEdit(CommandContext context) {
+            return List.of("alpha", "beta");
+        }
     }
 
     @CommandComponent(value = "example", treeHelp = true)
     private static final class TreeCommand {
         @CommandHandler
-        private void home(CommandContext context) { context.requireArguments(0); }
+        private void home(CommandContext context) {
+            context.requireArguments(0);
+        }
 
         @CommandHandler(value = "items", permission = "admin")
-        private void items(CommandContext context) { context.requireArguments(0); }
+        private void items(CommandContext context) {
+            context.requireArguments(0);
+        }
 
         @CommandHandler(value = "items edit", permission = "admin", usage = "/example items edit <id>")
-        private void edit(CommandContext context) { context.requireArguments(1); }
+        private void edit(CommandContext context) {
+            context.requireArguments(1);
+        }
 
         @CommandHandler(value = "combat reload", permission = "admin")
-        private void reload(CommandContext context) { context.requireArguments(0); }
+        private void reload(CommandContext context) {
+            context.requireArguments(0);
+        }
 
         @CommandHandler(value = "npc", showInHelp = false)
-        private void legacyNpc(CommandContext context) { context.requireArguments(1); }
+        private void legacyNpc(CommandContext context) {
+            context.requireArguments(1);
+        }
 
         @CommandCompleter("npc")
-        private List<String> npcComplete(CommandContext context) { return List.of("legacy-id"); }
+        private List<String> npcComplete(CommandContext context) {
+            return List.of("legacy-id");
+        }
 
         @CommandHandler(value = "npc list")
-        private void npcList(CommandContext context) { context.requireArguments(0); }
+        private void npcList(CommandContext context) {
+            context.requireArguments(0);
+        }
     }
 
     @CommandComponent(value = "example", treeHelp = true)
     private static final class TreeWithoutRoot {
         @CommandHandler(value = "items")
-        private void items(CommandContext context) { }
+        private void items(CommandContext context) {
+        }
 
         @CommandHandler(value = "reload")
-        private void reload(CommandContext context) { }
+        private void reload(CommandContext context) {
+        }
     }
 
     @CommandComponent("dynamic")

@@ -51,6 +51,7 @@ class InventoryExchangeTest {
         assertEquals(2, result.contents()[0].getAmount());
         assertEquals(Material.GOLD_INGOT, result.contents()[0].getType());
     }
+
     @Test
     void consumesAcrossSlotsAndUsesTheFreedSpaceWithoutMutatingInputs() {
         ItemStack[] source = {new ItemStack(Material.STONE, 3), new ItemStack(Material.STONE, 4)};

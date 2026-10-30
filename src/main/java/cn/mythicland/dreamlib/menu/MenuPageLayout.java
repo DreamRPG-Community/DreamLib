@@ -26,10 +26,10 @@ public final class MenuPageLayout {
     /**
      * Visits the entries in a page with their corresponding inventory slots.
      *
-     * @param entries all entries in display order
+     * @param entries       all entries in display order
      * @param requestedPage zero-based page to display
-     * @param visitor receives the inventory slot and the entry
-     * @param <T> entry type
+     * @param visitor       receives the inventory slot and the entry
+     * @param <T>           entry type
      * @return the clamped page window
      */
     public static <T> PageWindow forEachEntry(List<T> entries, int requestedPage, BiConsumer<Integer, T> visitor) {

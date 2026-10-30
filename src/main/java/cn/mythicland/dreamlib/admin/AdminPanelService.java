@@ -101,10 +101,10 @@ public final class AdminPanelService implements Listener, AutoCloseable {
      * Checks whether a player can choose between multiple panels for a block.
      *
      * @param player administrator
-     * @param block block being managed
+     * @param block  block being managed
      * @return true when at least two providers apply
      * @throws IllegalStateException when called outside the primary thread
-     * @throws NullPointerException when an argument is null
+     * @throws NullPointerException  when an argument is null
      */
     public boolean hasMultiplePanels(Player player, Block block) {
         requirePrimaryThread();

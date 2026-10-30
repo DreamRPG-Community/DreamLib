@@ -106,7 +106,8 @@ class LocationSnapperTest {
         assertEquals(45.0F, LocationSnapper.snapYaw(405.0F));
         assertEquals(0.0F, LocationSnapper.snapYaw(720.0F));
         assertThrows(IllegalArgumentException.class, () -> LocationSnapper.snapHorizontalCoordinate(Double.NaN));
-        assertThrows(IllegalArgumentException.class, () -> LocationSnapper.snapStandingHeight(Double.POSITIVE_INFINITY));
+        assertThrows(IllegalArgumentException.class,
+                () -> LocationSnapper.snapStandingHeight(Double.POSITIVE_INFINITY));
         assertThrows(IllegalArgumentException.class, () -> LocationSnapper.snapYaw(Float.NaN));
     }
 }

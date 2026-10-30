@@ -448,7 +448,9 @@ public final class DreamLibApi implements AutoCloseable {
         return playerLoadingGate;
     }
 
-    /** Returns the shared client-side written book display service. */
+    /**
+     * Returns the shared client-side written book display service.
+     */
     public BookDisplayService bookDisplayService() {
         return bookDisplayService;
     }

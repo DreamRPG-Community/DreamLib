@@ -55,7 +55,8 @@ public final class MenuItems {
     public static ItemStack icon(ItemStack icon) {
         ItemStack result = Objects.requireNonNull(icon, "icon").clone();
         ItemMeta meta = result.getItemMeta();
-        if (meta == null) throw new IllegalArgumentException("Menu icon does not support item metadata: " + result.getType());
+        if (meta == null)
+            throw new IllegalArgumentException("Menu icon does not support item metadata: " + result.getType());
         meta.addItemFlags(ItemFlag.values());
         result.setItemMeta(meta);
         return result;
