@@ -1,6 +1,6 @@
-name: Lib
+name: DreamLib
 version: ${version}
-main: cn.mythicland.lib.LibPlugin
+main: cn.mythicland.dreamlib.DreamLibPlugin
 author: ShanguanLinG
 load: STARTUP
 depend: [ DecentHolograms ]
