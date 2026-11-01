@@ -1,18 +1,18 @@
 package cn.mythicland.dreamlib;
 
 import cn.mythicland.dreamlib.api.DreamLibApi;
+import cn.mythicland.framework.bukkit.bootstrap.ManagedPlugin;
 import org.bukkit.plugin.ServicePriority;
-import org.bukkit.plugin.java.JavaPlugin;
 
 /**
  * Bukkit entry point that owns and publishes the shared {@link DreamLibApi} service.
  */
-public final class DreamLibPlugin extends JavaPlugin {
+public final class DreamLibPlugin extends ManagedPlugin {
 
     private DreamLibApi api;
 
     @Override
-    public void onEnable() {
+    protected void enablePlugin() {
         this.api = new DreamLibApi(this, DreamLibApi.defaultPoolSize());
         getServer().getServicesManager().register(
                 DreamLibApi.class,
@@ -21,11 +21,11 @@ public final class DreamLibPlugin extends JavaPlugin {
                 ServicePriority.Normal
         );
 
-        getLogger().info("Lib runtime initialized.");
+        getLogger().info("DreamLib runtime initialized.");
     }
 
     @Override
-    public void onDisable() {
+    protected void disablePlugin() {
         if (api == null) return;
 
         getServer().getServicesManager().unregister(DreamLibApi.class, api);

@@ -3,5 +3,6 @@ version: ${version}
 main: cn.mythicland.dreamlib.DreamLibPlugin
 author: ShanguanLinG
 load: STARTUP
+loadbefore: [ MythicMobs ]
 depend: [ DecentHolograms ]
 description: Shared runtime library for self-written RPG plugins.

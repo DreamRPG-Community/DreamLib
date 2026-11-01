@@ -1,41 +1,44 @@
 package cn.mythicland.dreamlib.api;
 
-import cn.mythicland.dreamlib.admin.AdminPanelService;
-import cn.mythicland.dreamlib.bootstrap.PluginBootstrap;
-import cn.mythicland.dreamlib.container.ContainerAnimationService;
-import cn.mythicland.dreamlib.container.PacketContainerAnimationService;
-import cn.mythicland.dreamlib.database.DatabaseService;
-import cn.mythicland.dreamlib.integration.*;
-import cn.mythicland.dreamlib.item.ItemMarkerCodec;
-import cn.mythicland.dreamlib.item.ReflectiveItemMarkerCodec;
-import cn.mythicland.dreamlib.library.LibraryService;
-import cn.mythicland.dreamlib.loading.PlayerLoadingGate;
-import cn.mythicland.dreamlib.book.BookDisplayService;
-import cn.mythicland.dreamlib.book.LegacyBookDisplayService;
-import cn.mythicland.dreamlib.material.EnchantmentCatalog;
-import cn.mythicland.dreamlib.material.MaterialCatalog;
-import cn.mythicland.dreamlib.material.MaterialIconCatalog;
-import cn.mythicland.dreamlib.menu.MenuService;
-import cn.mythicland.dreamlib.path.PathService;
-import cn.mythicland.dreamlib.scoreboard.ScoreboardService;
-import cn.mythicland.dreamlib.storage.StorageService;
-import cn.mythicland.dreamlib.text.DecentFloatingTextService;
-import cn.mythicland.dreamlib.text.FloatingTextService;
-import cn.mythicland.dreamlib.web.EmbeddedHttpServer;
-import cn.mythicland.dreamlib.web.WebService;
+import cn.mythicland.dreamlib.database.SharedDatabase;
+import cn.mythicland.framework.bukkit.content.ContentWorkspace;
+import cn.mythicland.framework.bukkit.integration.hologram.DecentFloatingTextService;
+import cn.mythicland.framework.bukkit.admin.AdminPanelService;
+import cn.mythicland.framework.bukkit.book.BookDisplayService;
+import cn.mythicland.framework.bukkit.book.v1_12_R1.LegacyBookDisplayService;
+import cn.mythicland.framework.bukkit.bootstrap.PluginBootstrap;
+import cn.mythicland.framework.bukkit.component.PluginComponents;
+import cn.mythicland.framework.bukkit.container.ContainerAnimationService;
+import cn.mythicland.framework.bukkit.container.v1_12_R1.PacketContainerAnimationService;
+import cn.mythicland.framework.bukkit.hologram.FloatingTextService;
+import cn.mythicland.framework.bukkit.integration.*;
+import cn.mythicland.framework.bukkit.item.ItemMarkerCodec;
+import cn.mythicland.framework.bukkit.item.reflect.ReflectiveItemMarkerCodec;
+import cn.mythicland.framework.bukkit.material.EnchantmentCatalog;
+import cn.mythicland.framework.bukkit.material.MaterialCatalog;
+import cn.mythicland.framework.bukkit.material.MaterialIconCatalog;
+import cn.mythicland.framework.bukkit.menu.MenuManager;
+import cn.mythicland.framework.bukkit.player.PlayerLoadingGate;
+import cn.mythicland.framework.bukkit.scoreboard.ScoreboardService;
+import cn.mythicland.framework.bukkit.storage.StorageService;
+import cn.mythicland.framework.bukkit.task.BukkitTaskScheduler;
+import cn.mythicland.framework.bukkit.task.PluginTaskScope;
+import cn.mythicland.framework.database.DatabaseService;
+import cn.mythicland.framework.path.PathService;
+import cn.mythicland.framework.runtime.LibraryService;
+import cn.mythicland.framework.web.EmbeddedHttpServer;
+import cn.mythicland.framework.web.WebService;
 import com.sun.net.httpserver.HttpHandler;
-import org.bukkit.Bukkit;
-import org.bukkit.plugin.RegisteredServiceProvider;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
+
+import org.bukkit.plugin.RegisteredServiceProvider;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 
 /**
  * Shared lifecycle, scheduling, asynchronous execution, and command infrastructure for plugins.
@@ -46,7 +49,7 @@ import java.util.function.Supplier;
 public final class DreamLibApi implements AutoCloseable {
 
     private final JavaPlugin owner;
-    private final MenuService menuService;
+    private final MenuManager menuService;
     private final AdminPanelService adminPanelService;
     private final ContainerAnimationService containerAnimationService;
     private final FloatingTextService floatingTextService;
@@ -54,6 +57,7 @@ public final class DreamLibApi implements AutoCloseable {
     private final BookDisplayService bookDisplayService;
     private final LibraryService libraryService;
     private final DatabaseService databaseService;
+    private SharedDatabase sharedDatabase;
     private final ScoreboardService scoreboardService;
     private final MaterialCatalog materialCatalog;
     private final MaterialIconCatalog materialIconCatalog;
@@ -62,11 +66,12 @@ public final class DreamLibApi implements AutoCloseable {
     private final WebService webService;
     private final StorageService storageService;
     private final PathService pathService;
+    private final ContentWorkspace content;
     private final PlayerBalanceService balanceService;
     private final PlayerPointsService playerPointsService;
     private final PlaceholderService placeholderService;
     private final ExecutorService asyncExecutor;
-    private final Set<BukkitTask> scheduledTasks = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private final PluginTaskScope taskScope;
     private volatile boolean closed;
 
     /**
@@ -78,7 +83,7 @@ public final class DreamLibApi implements AutoCloseable {
      * @throws IllegalArgumentException if {@code poolSize} is less than one
      */
     public DreamLibApi(JavaPlugin owner, int poolSize) {
-        this(owner, poolSize, new PlayerLoadingGate(owner), new MenuService(owner));
+        this(owner, poolSize, new PlayerLoadingGate(owner), createMenus(owner));
     }
 
     /**
@@ -88,7 +93,7 @@ public final class DreamLibApi implements AutoCloseable {
      * @param poolSize    the number of asynchronous worker threads
      * @param menuService the shared menu service
      */
-    public DreamLibApi(JavaPlugin owner, int poolSize, MenuService menuService) {
+    public DreamLibApi(JavaPlugin owner, int poolSize, MenuManager menuService) {
         this(owner, poolSize, new PlayerLoadingGate(owner), menuService);
     }
 
@@ -96,10 +101,11 @@ public final class DreamLibApi implements AutoCloseable {
             JavaPlugin owner,
             int poolSize,
             PlayerLoadingGate playerLoadingGate,
-            MenuService menuService
+            MenuManager menuService
     ) {
         if (poolSize < 1) throw new IllegalArgumentException("poolSize must be positive");
         this.owner = Objects.requireNonNull(owner, "owner");
+        this.taskScope = new PluginTaskScope(owner);
         this.menuService = Objects.requireNonNull(menuService, "menuService");
         this.containerAnimationService = new PacketContainerAnimationService(owner);
         this.adminPanelService = new AdminPanelService(owner, menuService, containerAnimationService);
@@ -117,9 +123,16 @@ public final class DreamLibApi implements AutoCloseable {
         this.webService = new WebService(asyncExecutor);
         this.storageService = new StorageService();
         this.pathService = new PathService();
+        this.content = contentFor(owner);
         this.balanceService = new VaultEconomyBridge(owner);
         this.playerPointsService = new PlayerPointsBridge(owner);
         this.placeholderService = new PlaceholderApiBridge(owner);
+    }
+
+    private static MenuManager createMenus(JavaPlugin owner) {
+        MenuManager menus = new MenuManager(owner, null, new BukkitTaskScheduler(owner));
+        owner.getServer().getPluginManager().registerEvents(menus, owner);
+        return menus;
     }
 
     /**
@@ -170,14 +183,6 @@ public final class DreamLibApi implements AutoCloseable {
         return message == null || message.isBlank() ? cause.getClass().getSimpleName() : message;
     }
 
-    private static <T> void completeOnMainThread(CompletableFuture<T> future, Supplier<T> supplier) {
-        try {
-            future.complete(supplier.get());
-        } catch (Throwable throwable) {
-            future.completeExceptionally(throwable);
-        }
-    }
-
     private static ThreadFactory namedThreadFactory() {
         AtomicInteger sequence = new AtomicInteger();
         return runnable -> {
@@ -220,10 +225,7 @@ public final class DreamLibApi implements AutoCloseable {
      * @throws NullPointerException if {@code action} is null
      */
     public CompletableFuture<Void> runOnMain(Runnable action) {
-        return scheduleOnMain(() -> {
-            action.run();
-            return null;
-        });
+        return taskScope.runOnMain(action);
     }
 
     /**
@@ -235,7 +237,7 @@ public final class DreamLibApi implements AutoCloseable {
      * @throws NullPointerException if {@code supplier} is null
      */
     public <T> CompletableFuture<T> supplyOnMain(Supplier<T> supplier) {
-        return scheduleOnMain(supplier);
+        return taskScope.supplyOnMain(supplier);
     }
 
     /**
@@ -251,9 +253,7 @@ public final class DreamLibApi implements AutoCloseable {
     public BukkitTask runLater(long delayTicks, Runnable action) {
         if (closed) throw new IllegalStateException("Lib API is closed");
 
-        BukkitTask task = owner.getServer().getScheduler().runTaskLater(owner, action, delayTicks);
-        scheduledTasks.add(task);
-        return task;
+        return taskScope.runLater(delayTicks, action);
     }
 
     /**
@@ -273,14 +273,7 @@ public final class DreamLibApi implements AutoCloseable {
         if (periodTicks < 1L) throw new IllegalArgumentException("periodTicks must be positive");
         if (closed) throw new IllegalStateException("Lib API is closed");
 
-        BukkitTask task = owner.getServer().getScheduler().runTaskTimer(
-                owner,
-                action,
-                delayTicks,
-                periodTicks
-        );
-        scheduledTasks.add(task);
-        return task;
+        return taskScope.runTimer(delayTicks, periodTicks, action);
     }
 
     /**
@@ -292,7 +285,15 @@ public final class DreamLibApi implements AutoCloseable {
      */
     public PluginBootstrap createPluginBootstrap(JavaPlugin plugin, String basePackage) {
         if (closed) throw new IllegalStateException("Lib API is closed");
-        return new PluginBootstrap(plugin, this, basePackage);
+        return new PluginBootstrap(plugin, new PluginComponents(plugin, basePackage, components -> {
+            components.bind(DreamLibApi.class, this);
+            components.bind(AdminPanelService.class, adminPanelService);
+            components.bind(ContainerAnimationService.class, containerAnimationService);
+            components.bind(FloatingTextService.class, floatingTextService);
+            components.bind(MenuManager.class, menuService);
+            components.bind(PlayerLoadingGate.class, playerLoadingGate);
+            components.bind(ContentWorkspace.class, content);
+        }));
     }
 
     /**
@@ -311,6 +312,18 @@ public final class DreamLibApi implements AutoCloseable {
      */
     public DatabaseService databaseService() {
         return databaseService;
+    }
+
+    /**
+     * Returns the lazily initialized database owned by the shared Lib lifecycle.
+     *
+     * @return shared database service
+     * @throws IllegalStateException when the Lib lifecycle is closed or initialization fails
+     */
+    public synchronized SharedDatabase sharedDatabase() {
+        if (closed) throw new IllegalStateException("Lib is closed");
+        if (sharedDatabase == null) sharedDatabase = new SharedDatabase(owner, libraryService, databaseService);
+        return sharedDatabase;
     }
 
     /**
@@ -377,6 +390,22 @@ public final class DreamLibApi implements AutoCloseable {
     }
 
     /**
+     * Returns the server-owned editable content workspace. Callers must run file I/O on the
+     * shared executor, or during initialization before players can access the owning feature.
+     *
+     * @return content path and publication service
+     */
+    /** Opens the suite's shared editable content workspace. */
+    public static ContentWorkspace contentFor(JavaPlugin plugin) {
+        return new ContentWorkspace(plugin.getDataFolder().toPath().toAbsolutePath().getParent().resolve("DreamRPG-content"),
+                "dungeons", "dungeon.yml");
+    }
+
+    public ContentWorkspace content() {
+        return content;
+    }
+
+    /**
      * Returns the reflective Vault economy bridge.
      *
      * @return optional player balance service
@@ -408,7 +437,7 @@ public final class DreamLibApi implements AutoCloseable {
      *
      * @return the menu service owned by Lib
      */
-    public MenuService menuService() {
+    public MenuManager menuService() {
         return menuService;
     }
 
@@ -495,8 +524,7 @@ public final class DreamLibApi implements AutoCloseable {
         if (closed) return;
         closed = true;
 
-        scheduledTasks.forEach(BukkitTask::cancel);
-        scheduledTasks.clear();
+        taskScope.close();
         scoreboardService.close();
         playerLoadingGate.close();
         asyncExecutor.shutdownNow();
@@ -504,24 +532,13 @@ public final class DreamLibApi implements AutoCloseable {
         menuService.close();
         containerAnimationService.close();
         floatingTextService.close();
+        if (sharedDatabase != null) {
+            try {
+                sharedDatabase.close();
+            } catch (Exception exception) {
+                owner.getLogger().warning("Failed to close shared database: " + exception.getMessage());
+            }
+        }
     }
 
-    private <T> CompletableFuture<T> scheduleOnMain(Supplier<T> supplier) {
-        CompletableFuture<T> future = new CompletableFuture<>();
-        if (Bukkit.isPrimaryThread()) {
-            completeOnMainThread(future, supplier);
-            return future;
-        }
-
-        try {
-            BukkitTask task = owner.getServer().getScheduler().runTask(
-                    owner,
-                    () -> completeOnMainThread(future, supplier)
-            );
-            scheduledTasks.add(task);
-        } catch (RuntimeException exception) {
-            future.completeExceptionally(exception);
-        }
-        return future;
-    }
 }

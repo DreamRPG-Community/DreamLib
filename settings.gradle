@@ -7,6 +7,8 @@ pluginManagement {
     }
 }
 
+apply from: file("../../../../MythicLand/plugins/MythicFramework/gradle/workspace-build-lock.gradle")
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
     repositories {
@@ -19,3 +21,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "DreamLib"
+
+includeBuild("../../../../MythicLand/plugins/MythicFramework")

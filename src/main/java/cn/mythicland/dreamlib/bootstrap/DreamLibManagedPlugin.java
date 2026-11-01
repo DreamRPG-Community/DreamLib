@@ -1,7 +1,8 @@
 package cn.mythicland.dreamlib.bootstrap;
 
 import cn.mythicland.dreamlib.api.DreamLibApi;
-import org.bukkit.plugin.java.JavaPlugin;
+import cn.mythicland.framework.bukkit.bootstrap.ManagedPlugin;
+import cn.mythicland.framework.bukkit.bootstrap.PluginBootstrap;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -11,7 +12,7 @@ import java.util.logging.Level;
 /**
  * Bukkit entry point for plugins composed of ordered DreamLib component graphs.
  */
-public abstract class DreamLibManagedPlugin extends JavaPlugin {
+public abstract class DreamLibManagedPlugin extends ManagedPlugin {
     private final List<String> packages;
     private final Map<String, PluginBootstrap> bootstraps = new LinkedHashMap<>();
 
@@ -32,26 +33,26 @@ public abstract class DreamLibManagedPlugin extends JavaPlugin {
      */
     @Override
     @SuppressWarnings("resource")
-    public final void onEnable() {
-        try {
-            DreamLibApi lib = DreamLibApi.require(this);
-            for (String componentPackage : packages) {
-                PluginBootstrap bootstrap = lib.createPluginBootstrap(this, componentPackage);
-                bootstraps.put(componentPackage, bootstrap);
-                bootstrap.enable();
-            }
-        } catch (RuntimeException exception) {
-            getLogger().log(Level.SEVERE, getName() + " failed to enable: " + DreamLibApi.rootCauseMessage(exception),
-                    exception);
-            getServer().getPluginManager().disablePlugin(this);
+    protected final void enablePlugin() {
+        DreamLibApi lib = DreamLibApi.require(this);
+        for (String componentPackage : packages) {
+            PluginBootstrap bootstrap = lib.createPluginBootstrap(this, componentPackage);
+            bootstraps.put(componentPackage, bootstrap);
+            bootstrap.enable();
         }
+    }
+
+    @Override
+    protected final void onEnableFailure(RuntimeException exception) {
+        getLogger().log(Level.SEVERE, getName() + " failed to enable: " + DreamLibApi.rootCauseMessage(exception),
+                exception);
     }
 
     /**
      * Closes component graphs in reverse startup order on the Bukkit primary thread.
      */
     @Override
-    public final void onDisable() {
+    protected final void disablePlugin() {
         for (String componentPackage : packages.reversed()) {
             PluginBootstrap bootstrap = bootstraps.get(componentPackage);
             if (bootstrap != null) {

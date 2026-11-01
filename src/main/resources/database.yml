@@ -1,0 +1,14 @@
+mode: sqlite
+poolSize: 8
+minimumIdle: 2
+connectionTimeoutMs: 5000
+maxLifetimeMs: 1800000
+keepaliveTimeMs: 300000
+postgresql:
+  host: 127.0.0.1
+  port: 5432
+  name: dreamrpg
+  username: dreamrpg
+  password: ""
+sqlite:
+  file: data/dreamrpg.db
